@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evaluation Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap">
+<style>
+/* Course look: navy and pale slate (same as Matrix Detective and the Poverty Lab). */
+:root{
+  --bg:#F3F5F8; --panel:#FFFFFF; --ink:#14213D; --ink-2:#4A5672; --line:#D5DBE5;
+  --navy:#14213D; --chip:#E7EBF2; --focus:#2E5BBA;
+  --good:#1F7A70; --good-soft:#DCEFEC; --half:#9A6A12; --half-soft:#F5EBD6; --bad:#B23A48; --bad-soft:#F3D9DC;
+  --a:#2E5BBA; --b:#9A6A12; --truth:#1F7A70;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1526; --panel:#162036; --ink:#E6EAF2; --ink-2:#A3AEC4; --line:#2B3854;
+  --navy:#9DB4E8; --chip:#22304C; --focus:#8FB0F5;
+  --good:#5CC2B4; --good-soft:#173A37; --half:#D9A94A; --half-soft:#3D3220; --bad:#E07A86; --bad-soft:#4A2630;
+  --a:#8FB0F5; --b:#D9A94A; --truth:#5CC2B4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1526; --panel:#162036; --ink:#E6EAF2; --ink-2:#A3AEC4; --line:#2B3854;
+  --navy:#9DB4E8; --chip:#22304C; --focus:#8FB0F5;
+  --good:#5CC2B4; --good-soft:#173A37; --half:#D9A94A; --half-soft:#3D3220; --bad:#E07A86; --bad-soft:#4A2630;
+  --a:#8FB0F5; --b:#D9A94A; --truth:#5CC2B4; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 56px;display:grid;gap:16px}
+h1,h2,h3{font-family:var(--serif);margin:0;font-weight:600;text-wrap:balance}
+h1{font-size:clamp(1.8rem,5vw,2.4rem);line-height:1.12}
+h2{font-size:1.35rem;line-height:1.2}
+h3{font-size:1.02rem}
+p{margin:0}
+.eyebrow{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.muted{color:var(--ink-2)}
+.small{font-size:.86rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.score{font-family:var(--mono);font-size:.92rem;background:var(--chip);border-radius:999px;padding:4px 12px}
+.score.flash{animation:flash .6s}
+@keyframes flash{0%{background:var(--good-soft)}100%{background:var(--chip)}}
+.progress{height:6px;background:var(--chip);border-radius:99px;overflow:hidden}
+.progress > i{display:block;height:100%;background:var(--navy);width:0;transition:width .3s}
+.q{display:grid;gap:8px}
+.q-title{font-weight:600}
+.q-title .n{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.8rem;margin-right:6px}
+.opts{display:grid;gap:8px}
+.opts.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:560px){.opts.three,.opts.two.stack{grid-template-columns:1fr}}
+.opt{font:inherit;text-align:left;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;min-height:44px;display:grid;gap:2px;align-content:center}
+.opt small{color:var(--ink-2);font-size:.8rem;line-height:1.35}
+.opt:hover{border-color:var(--navy)}
+.opt:disabled:hover{border-color:var(--line)}
+.opt.full:disabled:hover{border-color:var(--good)}
+.opt.wrong:disabled:hover{border-color:var(--bad)}
+.opt[aria-pressed="true"]{border-color:var(--navy);background:var(--chip);box-shadow:inset 0 0 0 1px var(--navy)}
+.opt.full{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18px;background:var(--navy);color:var(--panel);cursor:pointer;min-height:44px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:76px;resize:vertical}
+.fb{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.fb-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.mark{font-family:var(--mono);font-weight:500;font-size:.82rem;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.mark.full{background:var(--good-soft);color:var(--good)} .mark.wrong{background:var(--bad-soft);color:var(--bad)} .mark.neutral{background:var(--chip);color:var(--ink-2)}
+.why{border-left:3px solid var(--navy);padding-left:12px;font-family:var(--serif);font-size:1.02rem}
+.alert{border-radius:10px;padding:10px 12px;background:var(--half-soft);border:1.5px solid var(--half)}
+.note{border-radius:10px;padding:10px 12px;background:var(--chip)}
+.speaker{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--panel);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:1.05rem}
+.quote{font-family:var(--serif);font-size:1.08rem;line-height:1.4}
+.who{font-size:.8rem;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:4px}
+details.notes{border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px}
+details.notes summary{cursor:pointer;font-weight:600}
+details.notes ul{margin-top:8px}
+/* Mission 1: the ladder */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipb{font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;min-height:40px}
+.chipb[aria-pressed="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+.chipb.full{border-color:var(--good);background:var(--good-soft);color:var(--ink)} .chipb.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--ink)}
+.ladder{display:grid;gap:6px}
+.rung{border-radius:10px;background:var(--navy);color:var(--panel);padding:8px 12px;font-weight:600;text-align:center}
+.rung small{display:block;font-weight:400;opacity:.85;font-size:.8rem}
+.slot{font:inherit;color:var(--ink);text-align:left;width:100%;border:1.5px dashed var(--line);border-radius:10px;background:transparent;min-height:56px;padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;cursor:pointer}
+.slot.can{border-color:var(--navy);border-style:solid;background:var(--chip)}
+.slot .lbl{font-size:.8rem;color:var(--ink-2);margin-right:auto}
+.slot .in{font-size:.86rem;border-radius:999px;padding:3px 10px;background:var(--chip);border:1.5px solid var(--line)}
+.slot .in.full{border-color:var(--good);background:var(--good-soft)} .slot .in.wrong{border-color:var(--bad);background:var(--bad-soft);text-decoration:line-through}
+.slot .in.fix{border-color:var(--good);border-style:dashed;background:transparent}
+/* charts */
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(120px,34%) 1fr auto;gap:8px;align-items:center;font-size:.88rem}
+.bar .track{height:18px;background:var(--chip);border-radius:6px;overflow:hidden}
+.bar .track i{display:block;height:100%;background:var(--a);border-radius:6px}
+.bar .track i.b{background:var(--b)} .bar .track i.t{background:var(--truth)}
+.bar .v{font-family:var(--mono);font-size:.86rem;min-width:3.6em;text-align:right}
+.est{font-family:var(--mono);font-size:1.05rem;background:var(--chip);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.est b{font-size:1.25rem}
+.dec{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:end;height:120px;position:relative;border-bottom:0}
+.dec .col{display:grid;grid-template-rows:1fr 1fr;height:100%}
+.dec .up,.dec .down{display:flex}
+.dec .up{align-items:flex-end;border-bottom:1.5px solid var(--ink-2)}
+.dec .down{align-items:flex-start}
+.dec i{display:block;width:100%;border-radius:3px}
+.dec .up i{background:var(--truth)} .dec .down i{background:var(--bad)}
+.declab{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;font-size:.7rem;text-align:center;color:var(--ink-2);font-family:var(--mono)}
+/* truth meter */
+.meter{position:relative;height:88px;margin:26px 12px 4px}
+.meter .axis{position:absolute;left:0;right:0;top:26px;height:2px;background:var(--line)}
+.meter .tick{position:absolute;top:21px;width:1px;height:12px;background:var(--ink-2)}
+.meter .tl{position:absolute;top:72px;font-size:.7rem;color:var(--ink-2);transform:translateX(-50%);font-family:var(--mono)}
+.meter .dot{position:absolute;top:15px;width:24px;height:24px;border-radius:50%;margin-left:-12px;background:var(--a);color:#fff;font-size:.74rem;font-weight:600;display:grid;place-items:center;border:2px solid var(--panel)}
+.meter .truthline{position:absolute;top:-6px;height:76px;width:3px;margin-left:-1.5px;background:var(--truth);border-radius:2px}
+.meter .truthlab{position:absolute;top:-26px;font-size:.74rem;font-weight:600;color:var(--truth);transform:translateX(-50%);white-space:nowrap}
+.legend{display:grid;gap:6px;font-size:.9rem}
+.legend .row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.legend .k{width:24px;height:24px;border-radius:50%;background:var(--a);color:#fff;font-size:.74rem;font-weight:600;display:grid;place-items:center}
+.legend .row.t .k{background:var(--truth)}
+.legend .v{font-family:var(--mono)}
+.badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.badges{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.badge{border:1.5px solid var(--line);border-radius:12px;padding:10px;text-align:center;display:grid;gap:2px}
+.badge b{font-family:var(--serif);font-size:1.4rem}
+.badge.won{border-color:var(--good);background:var(--good-soft)}
+.code{font-family:var(--mono);font-size:.78rem;word-break:break-all;background:var(--chip);border-radius:8px;padding:10px;user-select:all}
+.rank{font-family:var(--serif);font-size:1.5rem;font-weight:700}
+.big{font-family:var(--serif);font-size:2.2rem;font-weight:700;line-height:1}
+.envelope{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center}
+.envelope .ic{font-size:1.4rem}
+table.t{border-collapse:collapse;width:100%;font-size:.9rem}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:right}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t th{font-weight:600;color:var(--ink-2);font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+/* v2: questions to witnesses, real files, newspaper */
+.who .wants{font-weight:400;text-transform:none;letter-spacing:0}
+.answer{border-left:3px solid var(--b);padding:4px 0 4px 12px;display:grid;gap:2px}
+.answer .you{font-size:.8rem;color:var(--ink-2);font-weight:600}
+.answer .quote{font-size:1rem}
+.answer.late{border-left-color:var(--line)}
+.locked{opacity:.5}
+.files{border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;font-size:.94rem}
+.files .tag{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.paper{border:2px solid var(--ink);border-radius:4px;padding:14px 16px;display:grid;gap:8px}
+.paper .mast{font-family:var(--serif);font-weight:700;font-size:.86rem;text-align:center;border-bottom:3px double var(--ink);padding-bottom:6px;letter-spacing:.08em}
+.paper h3{font-size:1.45rem;line-height:1.15}
+.paper p{font-family:var(--serif)}
+.under{color:var(--bad)}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:6px}
+.bar .v{min-width:5.2em}
+.legend small{font-size:.78rem;display:block}
+.legend .v{text-align:right}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* ---------- Settings the teacher may edit ---------- */
+/* Hand-in: paste the Google Form link. With a pre-filled link (code field set to TEST) the code arrives filled in;
+   with only FORM_URL the button copies the code and opens the form; with neither, students copy the code. */
+const FORM_URL = "";
+const FORM_PREFILL = "";
+const DEADLINE = "Wednesday 18 November, 23:59";
+const formLink = code => FORM_PREFILL ? FORM_PREFILL.replace(/=TEST(&|$)/, "="+encodeURIComponent(code)+"$1") : FORM_URL;
+
+/* ---------- The numbers (from the Redistria model, seed 2026, rounded to whole numbers) ---------- */
+/* Poor families of every 100. k0, k1: families with children, last year and this year. cf: this year without the benefit.
+   n0, n1: families without the benefit. w, l: lottery winners and families who wait. ab: this year's incomes with the benefit taken away.
+   DRAWS: the result of the lottery when other families are drawn. */
+const N = {k0:36, k1:12, cf:26, n0:13, n1:9, w:12, l:26, ab:32};
+const DRAWS = [14,13,13,15,14,14,13,13,12,14];
+const BA = N.k0-N.k1, TRUE = N.cf-N.k1, WAGES = N.k0-N.cf, LOT = N.l-N.w, SUM = N.ab-N.k1;
+
+/* ---------- Questions: the score is the number of right answers ---------- */
+/* Two answer sets come back in the same order every time, so that their wording can never point to the answer. */
+const VERDICT = ["Too big","Too small","About right"];
+const DESCRIBE = [
+  "It mixes the policy with other changes of that year.",
+  "It compares two groups that differed from the start.",
+  "It ignores that people also changed what they do.",
+  "It compares two similar groups in the same year."
+];
+const DESC_Q = "Which sentence describes this comparison best?";
+const Q = {
+  bet:  {opts:["All of it","More than half","Less than half","None of it"], ans:1},
+  c1v:  {t:`So the government's number, ${BA} points, is…`, opts:VERDICT, ans:0,
+         why:`Too big. “Before and after” counts everything that happened in that year as the work of the benefit.`},
+  c2d:  {t:DESC_Q, opts:DESCRIBE, ans:1,
+         no:{0:"Both groups are measured in the same year, so other changes of that year are in both numbers.", 2:"Both numbers are real numbers of this year. What families do is already in them.", 3:"The groups share the same year, but they were not similar."},
+         why:`The two groups were different from the start. Before the benefit, <b>${N.k0} of 100</b> families with children were poor, and <b>${N.n0} of 100</b> other families.`},
+  c2v:  {t:"So the opposition's answer, “no effect”, is…", opts:VERDICT, ans:1,
+         why:`Too small. Before the benefit the gap between the groups was ${N.k0-N.n0} points (${N.k0} − ${N.n0}). Now it is ${N.k1-N.n1} points (${N.k1} − ${N.n1}). The gap is much smaller. That does not look like “no effect”.`},
+  c3d:  {t:DESC_Q, opts:DESCRIBE, ans:3,
+         no:{0:"Both groups lived through the same year, so other changes are in both numbers.", 1:"A lottery chose the groups, so they did not differ from the start.", 2:"Both numbers are real. What the winners do is already in their number."},
+         why:`A lottery chose who gets the benefit first. So the two groups were similar at the start. Both lived through the same year, with the same rise in wages.`},
+  c3v:  {t:`So the researcher's number, ${LOT} points, is…`, opts:VERDICT, ans:2,
+         why:`About right. The families who wait show what happens to families like the winners <b>without</b> the benefit. Real researchers do this too. In the United States a lottery chose 1,000 people who got $1,000 a month for three years.`},
+  c4d:  {t:DESC_Q, opts:DESCRIBE, ans:2,
+         no:{0:"Both numbers use the incomes of this year, so other changes of the year are in both.", 1:"These are the same families in both numbers.", 3:"There are not two groups here. These are the same families, with the benefit and with the benefit taken away on paper."},
+         why:`The sum changes one thing: it takes the benefit away. But families also changed what they do. In 3 of 10 families with the benefit, one parent now works less and earns less. The sum keeps these lower earnings.`},
+  c4v:  {t:`Without the benefit, these parents would work more and earn more. So the Budget Office's number, ${SUM} points, is…`, opts:VERDICT, ans:0,
+         why:`Too big. In a real year without the benefit, fewer than ${N.ab} of 100 families would be poor, because parents would earn more. So the real cut is smaller than ${SUM} points.`},
+  t1:   {t:DESC_Q, opts:DESCRIBE, ans:1,
+         no:{0:"Both groups of schools are measured in the same year.", 2:"Nothing in this case says that people changed what they do.", 3:"The schools share the same year, but they were not similar."},
+         why:`The 20 schools were chosen because their children are the poorest. So the two groups of schools were different from the start. Their lower results can come from poverty, and not from the lunches.`},
+  t2:   {t:"The city wants a fair comparison next year. How should it choose the 20 schools?", opts:["The first 20 schools that ask for lunches","The 20 schools nearest to the city centre","20 schools drawn by lottery from all 200"], ans:2,
+         why:`A lottery. Then the 20 schools are similar to the other 180. Schools that ask first, or schools in the centre, can be different from the others in many ways.`},
+  t3:   {t:DESC_Q, opts:DESCRIBE, ans:0,
+         no:{1:"There are not two groups here. It is the same country in two years.", 2:"Nothing in this case says that people changed what they do.", 3:"There are not two groups here. It is the same country in two years."},
+         why:`This is “before and after” again. New factories also bring jobs. The minister counts their effect as the work of the training.`},
+  t4:   {t:`In this game the Budget Office's sum gave a number that was too big. But the same sum is the right tool for another question. Which one?`, opts:["Who gets money from the state this year, and who pays?","How many parents will work less when the benefit starts?","How much would child poverty fall without any benefit?"], ans:0,
+         why:`The sum follows the money: who gets it and who pays. Your reading for Friday does this for 96 countries. The sum cannot say what people would do in a world without the benefit.`}
+};
+const ORDER = ["bet","c1v","c2d","c2v","c3d","c3v","c4d","c4v","t1","t2","t3","t4"], MAX = ORDER.length;
+const STEPS = ["intro","claim","c1","c2","c3","c4","world","case1","case2","end"];
+const TITLE = {claim:"The claim", c1:"Comparison 1 of 4", c2:"Comparison 2 of 4", c3:"Comparison 3 of 4", c4:"Comparison 4 of 4", world:"The true answer", case1:"New case 1 of 2", case2:"New case 2 of 2", end:"Result"};
+if (typeof module !== "undefined") module.exports = {Q, ORDER, DESCRIBE, VERDICT};
+else {
+
+/* ---------- State ---------- */
+const fresh = () => ({screen:"intro", name:"", score:0, start:null, a:{}, draws:1, note:""});
+let S = fresh();
+try { const s = sessionStorage.getItem("evlab4"); if (s) { const o = JSON.parse(s); if (o && o.screen) S = Object.assign(fresh(), o); } } catch(e){}
+const save = () => { try { sessionStorage.setItem("evlab4", JSON.stringify(S)); } catch(e){} };
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const done = k => S.a[k] !== undefined;
+
+/* ---------- Small builders ---------- */
+function header(){
+  const i = STEPS.indexOf(S.screen), n = STEPS.length-1;
+  return `<div class="topbar"><span class="eyebrow">Evaluation Lab · ${TITLE[S.screen]}</span><span class="score" aria-live="polite">Score: ${S.score} of ${MAX}</span></div>
+  <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${i}"><i style="width:${Math.round(100*i/n)}%"></i></div>`;
+}
+function speaker(av, who, quote){
+  return `<div class="speaker"><div class="avatar" aria-hidden="true">${av}</div><div><div class="who">${who}</div><div class="quote">${quote}</div></div></div>`;
+}
+function bars(rows, max, unit){
+  return `<div class="bars">${rows.map(([l,v,c]) => `<div class="bar"><span>${l}</span><span class="track"><i class="${c||""}" style="width:${Math.max(1,100*v/(max||40))}%"></i></span><span class="v">${v}${unit||" of 100"}</span></div>`).join("")}</div>`;
+}
+/* One question. A tap is the answer; the explanation comes at once. The guess is the only one that waits. */
+function ask(k, n, cols){
+  const q = Q[k], mine = S.a[k], fin = done(k), wait = k==="bet";
+  const cls = j => !fin || wait ? "" : (j===q.ans ? "full" : (j===mine ? "wrong" : ""));
+  return `<div class="q"><div class="q-title">${n?`<span class="n">${n}</span>`:""}${q.t||""}</div>
+    <div class="opts ${fin&&!wait?"":(cols||"")}">${q.opts.map((o,j) => fin && !wait && j!==q.ans && j!==mine ? "" : `<button class="opt ${cls(j)}" data-q="${k}" data-v="${j}" aria-pressed="${mine===j}" ${fin&&!wait?"disabled":""}>${o}</button>`).join("")}</div>
+    ${fin && !wait ? `<div class="fb-row" role="status"><span class="mark ${mine===q.ans?"full":"wrong"}">${mine===q.ans?"+1":"0"}</span><span>${mine!==q.ans && q.no && q.no[mine] ? `<span class="muted">${q.no[mine]}</span> ` : ""}${q.why}</span></div>` : ""}</div>`;
+}
+const trap = t => `<div class="note"><b>${t}</b></div>`;
+const next = (label, ok) => `<div class="actions"><button class="btn" id="next" ${ok?"":"disabled"}>${label}</button></div>`;
+
+/* ---------- Screens ---------- */
+function intro(){
+  return `<section class="panel">
+    <span class="eyebrow">Redistribution Policy and Politics · Session 7</span>
+    <h1>Evaluation Lab</h1>
+    <p class="quote">The government of Redistria started a child benefit. One year later it says: “The benefit cut child poverty.”</p>
+    <p>Parliament asks you to check this. Four people bring you <b>four comparisons</b>. You decide which numbers you can trust. Then the Lab shows you the true answer, and you try two new cases.</p>
+    <div class="q"><label class="q-title" for="name">Your name and surname</label><input type="text" id="name" autocomplete="name" value="${esc(S.name)}" placeholder="as on the attendance list"></div>
+    <p class="small muted">About 20 minutes. There are ${MAX} questions. Your score is the number of right answers. At the end you get a code for your teacher. Please play without AI.</p>
+    <div class="actions"><button class="btn" id="go" ${S.name.trim()?"":"disabled"}>Start</button></div>
+  </section>`;
+}
+function claim(){
+  return `<section class="panel">${header()}
+    <h2>The government's claim</h2>
+    <p>Since January, every family with children in Redistria gets a <b>child benefit</b>: money from the state every month.</p>
+    <p class="small muted">Poor families, of every 100 families with children:</p>
+    ${bars([["Last year, no benefit", N.k0, "b"],["This year, with the benefit", N.k1, "a"]])}
+    <p>Child poverty fell from ${N.k0} to ${N.k1} of every 100 families. That is a fall of <b>${BA} points</b>. The government says that the benefit did this.</p>
+    <div class="q"><div class="q-title"><span class="n">1</span>Your guess first. How much of the ${BA}-point fall did the benefit cause?</div></div>
+    ${ask("bet","","two")}
+    <p class="small muted">You will see the answer after the four comparisons.</p>
+    ${next("Next: check the claim", done("bet"))}
+  </section>`;
+}
+function c1(){
+  return `<section class="panel">${header()}
+    <h2>Before and after</h2>
+    ${speaker("G","The government",`“Before the benefit, ${N.k0} of 100 families with children were poor. After one year, ${N.k1} of 100. So the benefit cut child poverty by ${BA} points.”`)}
+    <p><b>This first check is an example.</b> Read the three steps.</p>
+    <ol class="steps">
+      <li>What is compared? The same families, last year and this year.</li>
+      <li>What else changed in that year? Wages rose. The minimum wage (the lowest legal wage) went up.</li>
+      <li>Higher wages also take families out of poverty. So a part of the ${BA} points comes from wages.</li>
+    </ol>
+    <div class="q"><div class="q-title">${DESC_Q} <span class="small muted" style="font-weight:400">In the example the answer is marked for you.</span></div>
+      <div class="opts">${DESCRIBE.map((o,j) => `<button class="opt ${j===0?"full":""}" disabled>${o}</button>`).join("")}</div></div>
+    ${ask("c1v","1","three")}
+    ${done("c1v") ? trap("Trap 1: other changes of the same year.") + next("Next comparison", true) : ""}
+  </section>`;
+}
+function c2(){
+  return `<section class="panel">${header()}
+    <h2>With and without</h2>
+    ${speaker("O","The opposition",`“This year, ${N.k1} of 100 families with the benefit are poor. But only ${N.n1} of 100 families without the benefit are poor. So the benefit does not work.”`)}
+    ${bars([["Families with the benefit", N.k1, "a"],["Families without the benefit", N.n1, "b"]])}
+    ${ask("c2d","1")}
+    ${done("c2d") ? "" : `<p class="small muted">The same sentence can be the best answer more than once in this game.</p>`}
+    ${done("c2d") ? ask("c2v","2","three") : ""}
+    ${done("c2v") ? trap("Trap 2: groups that were different from the start.") + next("Next comparison", true) : ""}
+  </section>`;
+}
+function c3(){
+  return `<section class="panel">${header()}
+    <h2>The lottery</h2>
+    ${speaker("R","A researcher",`“I would do it another way. Do not pay all families in the first year. A lottery chooses 2,000 families with children. They get the benefit. Another 2,000 families with children wait one year.”`)}
+    <p>The Lab runs this test. Poor families after one year:</p>
+    ${bars([["Lottery winners, with the benefit", N.w, "a"],["Families who wait, no benefit", N.l, "b"]])}
+    <p>The difference is <b>${LOT} points</b>. The researcher says: the benefit cut child poverty by ${LOT} points.</p>
+    ${ask("c3d","1")}
+    ${done("c3d") ? ask("c3v","2","three") : ""}
+    ${done("c3v") ? `<div class="note"><b>Try it.</b> A lottery is chance. Other families give a slightly different result. <button class="btn ghost" id="redraw" style="margin-left:6px" ${S.draws>=DRAWS.length?"disabled":""}>Draw again</button>
+      <div class="small" style="margin-top:8px;font-family:var(--mono)">${DRAWS.slice(0,S.draws).map((d,j) => `draw ${j+1}: ${d}`).join(" · ")}</div>
+      ${S.draws>=4 ? `<p class="small" style="margin-top:6px">The result moves a little, but it stays near ${LOT}.</p>`:""}</div>` + next("Next comparison", true) : ""}
+  </section>`;
+}
+function c4(){
+  return `<section class="panel">${header()}
+    <h2>The sum</h2>
+    ${speaker("B","The Budget Office",`“A lottery takes a year. We can calculate the answer today. Take the incomes of all families this year. Take the benefit away. Then ${N.ab} of 100 families with children are poor. With the benefit, ${N.k1} of 100 are poor. So the benefit cut child poverty by ${SUM} points.”`)}
+    ${bars([["With the benefit (real)", N.k1, "a"],["Same incomes, benefit taken away (calculated)", N.ab, "b"]])}
+    ${ask("c4d","1")}
+    ${done("c4d") ? ask("c4v","2","three") : ""}
+    ${done("c4v") ? trap("Trap 3: people changed what they do, and the number ignores it.") + next("See the true answer", true) : ""}
+  </section>`;
+}
+function world(){
+  const ok = S.a.bet===Q.bet.ans;
+  return `<section class="panel">${header()}
+    <h2>The parallel world</h2>
+    <p>In real life nobody can see what happens <b>without</b> the benefit. The Lab can. It runs the same year again: the same families, the same rise in wages, but no benefit.</p>
+    ${bars([["This year, with the benefit", N.k1, "a"],["The same year, without the benefit", N.cf, "t"]])}
+    <div class="est"><span>The benefit cut child poverty by</span><b>${TRUE} points</b></div>
+    <p>Better wages did the other ${WAGES} points (${N.k0} − ${N.cf}).</p>
+    <p class="small muted">How many points did the benefit cut? Four answers and the truth:</p>
+    ${bars([["Before and after", BA, "b"],["The sum", SUM, "b"],["The lottery", LOT, "a"],["With and without", 0, "b"],["<b>The parallel world</b>", TRUE, "t"]], 24, " points")}
+    <div class="envelope"><span class="ic" aria-hidden="true">✉</span><span>Your guess: <b>${Q.bet.opts[S.a.bet].toLowerCase()}</b>. ${ok ? "Right:" : "The answer:"} ${TRUE} of ${BA} points is more than half.</span><span class="mark ${ok?"full":"wrong"}">${ok?"+1":"0"}</span></div>
+    <p class="why">Only the lottery came close. Its two groups were similar, and they lived through the same year. In real life there is no parallel world. A fair comparison group is the best we have.</p>
+    ${next("Try two new cases", true)}
+  </section>`;
+}
+function case1(){
+  return `<section class="panel">${header()}
+    <h2>School lunches</h2>
+    <p>A city has money for free lunches in 20 of its 200 schools. It gives them to the 20 schools with the poorest children. One year later, test results in these 20 schools are lower than in the other 180.</p>
+    ${speaker("M","The mayor","“So free lunches do not help children learn.”")}
+    ${ask("t1","1")}
+    ${done("t1") ? ask("t2","2") : ""}
+    ${done("t2") ? next("Next case", true) : ""}
+  </section>`;
+}
+function case2(){
+  return `<section class="panel">${header()}
+    <h2>Job training</h2>
+    <p>In January a government starts free job training. It is open to everyone. In December, 7 of 100 workers have no job. One year before, it was 10 of 100. In the same year many new factories opened.</p>
+    ${speaker("M","The minister","“So the training cut unemployment by 3 points.”")}
+    ${ask("t3","1")}
+    ${done("t3") ? `<h2>One last question</h2>` + ask("t4","2") : ""}
+    ${done("t4") ? `<div class="q"><label class="q-title" for="note">Not for the score: what in this game was not clear to you? (You may leave this empty.)</label>
+      <textarea id="note" maxlength="300" placeholder="Your teacher will read this before Friday.">${esc(S.note)}</textarea></div>${next("Finish", true)}` : ""}
+  </section>`;
+}
+function makeCode(){
+  const payload = {v:4, n:S.name.trim(), a:ORDER.map(k => S.a[k]).join(""), d:S.draws, s:S.score, m:Math.round((Date.now()-S.start)/60000), t:S.note.trim()};
+  return "S7-" + btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function end(){
+  const code = makeCode(), link = formLink(code);
+  return `<section class="panel">${header()}
+    <span class="eyebrow">${esc(S.name)}</span>
+    <div class="big">${S.score} <span class="small muted" style="font-family:var(--sans);font-weight:400">of ${MAX} right answers</span></div>
+    <h2>Send your result</h2>
+    ${link ? `<p>Press <b>Send to your teacher</b>. ${FORM_PREFILL ? "A form opens with your code already in it. Press <b>Submit</b>." : "Your code is copied and a form opens. Paste the code into <b>Result code</b> and press <b>Submit</b>."}</p>
+      <div class="actions" style="justify-content:flex-start"><a class="btn" id="send" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">Send to your teacher ↗</a></div>`
+      : `<p>Press <b>Copy code</b>. Paste the code where your teacher asked for it.</p>`}
+    <p class="small muted">Deadline: ${DEADLINE}. You may play again. Your teacher counts your best result.</p>
+    <div class="code" id="code">${code}</div>
+    <div class="actions"><button class="btn ghost" id="again">Play again</button><button class="btn ${link?"ghost":""}" id="copy">Copy code</button></div>
+  </section>
+  <section class="panel">
+    <h2>Take this to Friday</h2>
+    <p class="why">A number about a policy is only as good as its comparison.</p>
+    <p>When somebody says “this policy cut poverty by so many points”, ask three questions:</p>
+    <ol class="steps"><li><b>What else changed in the same year?</b></li><li><b>Were the two groups similar before?</b></li><li><b>Did people change what they do?</b></li></ol>
+    <p>Your reading for Friday uses the method of the Budget Office for 96 countries. It shows who pays and who gains.</p>
+  </section>`;
+}
+
+/* ---------- Render and events ---------- */
+function render(){ app.innerHTML = ({intro, claim, c1, c2, c3, c4, world, case1, case2, end})[S.screen](); bind(); save(); }
+function go(screen){ S.screen = screen; render(); window.scrollTo({top:0}); }
+function bind(){
+  const $ = id => document.getElementById(id);
+  const on = (id, fn) => { if ($(id)) $(id).onclick = fn; };
+  if ($("name")) $("name").addEventListener("input", e => { S.name = e.target.value; $("go").disabled = !S.name.trim(); save(); });
+  if ($("note")) $("note").addEventListener("input", e => { S.note = e.target.value; save(); });
+  on("go", () => { S.start = Date.now(); go("claim"); });
+  document.querySelectorAll("[data-q]:not([disabled])").forEach(b => b.onclick = () => {
+    const k = b.dataset.q, v = +b.dataset.v;
+    if (done(k) && k!=="bet") return;
+    S.a[k] = v;
+    if (k!=="bet" && v===Q[k].ans) S.score++;
+    const y = window.scrollY; render(); window.scrollTo({top:y});
+  });
+  on("redraw", () => { if (S.draws < DRAWS.length) S.draws++; const y = window.scrollY; render(); window.scrollTo({top:y}); });
+  on("next", () => {
+    const i = STEPS.indexOf(S.screen);
+    if (S.screen==="c4" && !S.betScored) { S.betScored = true; if (S.a.bet===Q.bet.ans) S.score++; }
+    go(STEPS[i+1]);
+  });
+  if ($("send")) $("send").addEventListener("click", () => { if (!FORM_PREFILL) { try { navigator.clipboard.writeText($("code").textContent); } catch(e){} } });
+  on("copy", async () => {
+    const t = $("code").textContent;
+    try { await navigator.clipboard.writeText(t); $("copy").textContent = "Copied"; }
+    catch(e){ const r = document.createRange(); r.selectNodeContents($("code")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("copy").textContent = "Selected: press Ctrl+C"; }
+  });
+  on("again", () => { S = fresh(); render(); window.scrollTo({top:0}); });
+}
+render();
+}
+</script>
+</body></html>

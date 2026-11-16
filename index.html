@@ -167,9 +167,9 @@ ol.steps{margin:0;padding-left:22px;display:grid;gap:6px}
 /* ---------- Settings the teacher may edit ---------- */
 /* Hand-in: paste the Google Form link. With a pre-filled link (code field set to TEST) the code arrives filled in;
    with only FORM_URL the button copies the code and opens the form; with neither, students copy the code. */
-const FORM_URL = "";
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSe94dc1N9Um7njrWCjMh6Y8yb8QXV-ER9Bi4x5C6s3vveiMoQ/viewform";
 const FORM_PREFILL = "";
-const DEADLINE = "Wednesday 18 November, 23:59";
+const DEADLINE = "Thursday 19 November, 17:00";
 const formLink = code => FORM_PREFILL ? FORM_PREFILL.replace(/=TEST(&|$)/, "="+encodeURIComponent(code)+"$1") : FORM_URL;
 
 /* ---------- The numbers (from the Redistria model, seed 2026, rounded to whole numbers) ---------- */
@@ -380,7 +380,7 @@ function end(){
     <span class="eyebrow">${esc(S.name)}</span>
     <div class="big">${S.score} <span class="small muted" style="font-family:var(--sans);font-weight:400">of ${MAX} right answers</span></div>
     <h2>Send your result</h2>
-    ${link ? `<p>Press <b>Send to your teacher</b>. ${FORM_PREFILL ? "A form opens with your code already in it. Press <b>Submit</b>." : "Your code is copied and a form opens. Paste the code into <b>Result code</b> and press <b>Submit</b>."}</p>
+    ${link ? `<p>Press <b>Send to your teacher</b>. ${FORM_PREFILL ? "A form opens with your code already in it. Answer the short questions and press <b>Submit</b>." : "Your code is copied and a form opens. Paste the code into <b>Result code</b>, answer the short questions and press <b>Submit</b>."}</p>
       <div class="actions" style="justify-content:flex-start"><a class="btn" id="send" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">Send to your teacher ↗</a></div>`
       : `<p>Press <b>Copy code</b>. Paste the code where your teacher asked for it.</p>`}
     <p class="small muted">Deadline: ${DEADLINE}. You may play again. Your teacher counts your best result.</p>
